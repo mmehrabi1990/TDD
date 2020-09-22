@@ -5,10 +5,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.time.Year;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Bookshelf Specification")
+@ExtendWith(BooksParameterResolver.class)
 public class BookShelfSpec {
 
     private BookShelf shelf;
@@ -26,6 +27,7 @@ public class BookShelfSpec {
     private Book codeComplete;
     private Book mythicalManMonth;
     private Book cleanCode;
+    private Book refactoring;
 
 //    @BeforeEach
 //    void init() {
@@ -45,6 +47,7 @@ public class BookShelfSpec {
         this.codeComplete = books.get("Code Complete");
         this.mythicalManMonth = books.get("The Mythical Man-Month");
         this.cleanCode = books.get("Clean Code");
+        this.refactoring = books.get("Refactoring: Improving the Design of Existing Code");
     }
 
     @DisplayName("is empty when no book is added to it")
@@ -160,4 +163,100 @@ public class BookShelfSpec {
 //        }
 //    }
 //}
+
+    @Test
+    @DisplayName("is 0% completed and 100% to-read when no book is read yet")
+    void progress100PercentUnread() {
+        shelf.add(effectiveJava, codeComplete, mythicalManMonth, cleanCode);
+        Progress progress = shelf.progress();
+        assertThat(progress.completed()).isEqualTo(0);
+        assertThat(progress.toRead()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("is 40% completed and 60% to-read when 2 books are finished and 3 books not read yet")
+    void progressWithCompletedAndToReadPercentages() {
+        effectiveJava.startedReadingOn(LocalDate.of(2016, Month.JULY, 1));
+        effectiveJava.finishedReadingOn(LocalDate.of(2016, Month.JULY, 31));
+        cleanCode.startedReadingOn(LocalDate.of(2016, Month.AUGUST, 1));
+        cleanCode.finishedReadingOn(LocalDate.of(2016, Month.AUGUST, 31));
+        shelf.add(effectiveJava, codeComplete, mythicalManMonth, cleanCode, refactoring);
+        Progress progress = shelf.progress();
+        assertThat(progress.completed()).isEqualTo(40);
+        assertThat(progress.toRead()).isEqualTo(60);
+    }
+
+//    @Nested
+//    @DisplayName("search")
+//    class BookShelfSeachSpec {
+//        @BeforeEach
+//        void setup() {
+//            shelf.add(codeComplete, effectiveJava, mythicalManMonth, cleanCode);
+//        }
+//
+//        @Test
+//        @DisplayName(" should find books with title containing text")
+//        void shouldFindBooksWithTitleContainingText() {
+//            List<Book> books = shelf.findBooksByTitle("code");
+//            assertThat(books.size()).isEqualTo(2);
+//        }
+//
+//        @Test
+//        @DisplayName(" should find books with title containing text and published after specified date.")
+//        void shouldFilterSearchedBooksBasedOnPublishedDate() {
+//            List<Book> books = shelf.findBooksByTitle("code", b -> b.getPublishedOn().isBefore(LocalDate.of(2014, 12, 31)));
+//            assertThat(books.size()).isEqualTo(2);
+//        }
+//    }
+
+    @Nested
+    @DisplayName("search")
+    class BookShelfSeachSpec {
+        private Book cleanCode;
+        private Book codeComplete;
+
+        @BeforeEach
+        void init() {
+            cleanCode = new Book("Clean Code", "Robert C. Martin", LocalDate.
+                    of(2008, Month.AUGUST, 1));
+            codeComplete = new Book("Code Complete", "Steve McConnel", LocalDate.
+                    of(2004, Month.JUNE, 9));
+        }
+
+        @Nested
+        @DisplayName("book published date")
+        class BookPulishedFilterSpec {
+            @Test
+            @DisplayName("is after specified year")
+            void validateBookPublishedDatePostAskedYear() {
+                BookShelf.BookFilter filter = BookPublishedYearFilter.after(2007);
+                assertTrue(filter.apply(cleanCode));
+                assertFalse(filter.apply(codeComplete));
+            }
+        }
+
+        @Test
+        @DisplayName("Composite criteria is based on multiple filters")
+        void shouldFilterOnMultiplesCriteria(){
+            CompositeFilter compositeFilter = new CompositeFilter();
+            compositeFilter.addFilter( b -> false);
+            assertFalse(compositeFilter.apply(cleanCode));
+        }
+        @Test
+        @DisplayName("Composite criteria does not invoke after first failure")
+        void shouldNotInvokeAfterFirstFailure(){
+            CompositeFilter compositeFilter = new CompositeFilter();
+            compositeFilter.addFilter( b -> false);
+            compositeFilter.addFilter( b -> true);
+            assertFalse(compositeFilter.apply(cleanCode));
+        }
+        @Test
+        @DisplayName("Composite criteria invokes all filters")
+        void shouldInvokeAllFilters(){
+            CompositeFilter compositeFilter = new CompositeFilter();
+            compositeFilter.addFilter( b -> true);
+            compositeFilter.addFilter( b -> true);
+            assertTrue(compositeFilter.apply(cleanCode));
+        }
+    }
 }
