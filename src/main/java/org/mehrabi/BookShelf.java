@@ -1,10 +1,36 @@
 package org.mehrabi;
 
-import java.util.Collections;
-import java.util.List;
+import java.time.Year;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 public class BookShelf {
-    public List<String> books(){
-        return Collections.emptyList();
+
+    private final List<Book> books = new ArrayList<>();
+    public List<Book> getBooks(){
+        return Collections.unmodifiableList(books);
+    }
+
+    public void add(Book... booksToAdd) {
+        books.addAll(Arrays.asList(booksToAdd));
+    }
+
+    public List<Book> arrange() {
+        return books.stream().sorted().collect(Collectors.toList());
+    }
+    public List<Book> arrange(Comparator<Book> criteria) {
+        return books.stream().sorted(criteria).collect(Collectors.toList());
+    }
+
+    public Map<Year, List<Book>> groupByPublicationYear() {
+        return groupBy(book -> Year.of(book.getPublishedOn().getYear()));
+    }
+    public <K> Map<K, List<Book>> groupBy(Function<Book, K> fx) {
+        return books
+                .stream()
+                .collect(groupingBy(fx));
     }
 }
