@@ -1,0 +1,9 @@
+
+L
+java:S1612",Replace this lambda with a method reference.(ŒÃ–ùÿÿÿÿ8Ùö™½Ë.
+X
+java:S1128"8Remove this unused import 'java.util.stream.Collectors'.(Óóº´úÿÿÿÿ8‰ıÑ·Ë.
+P
+java:S1128"0Remove this unused import 'java.time.LocalDate'.(›‘¬èıÿÿÿÿ8‰ıÑ·Ë.
+T
+java:S1128"9Remove this unused import 'java.util.function.Predicate'.(ïÍ–¶8‰ıÑ·Ë.

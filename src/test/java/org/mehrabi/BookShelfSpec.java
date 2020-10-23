@@ -169,7 +169,7 @@ public class BookShelfSpec {
     void progress100PercentUnread() {
         shelf.add(effectiveJava, codeComplete, mythicalManMonth, cleanCode);
         Progress progress = shelf.progress();
-        assertThat(progress.completed()).isEqualTo(0);
+        assertThat(progress.completed()).isEqualTo(1);
         assertThat(progress.toRead()).isEqualTo(100);
     }
 
